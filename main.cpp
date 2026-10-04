@@ -91,13 +91,13 @@ int main(int argc, char **argv) {
 	//On windows, load OpenGL entrypoints: (does nothing on other platforms)
 	init_GL();
 
-	//Set VSYNC + Late Swap (prevents crazy FPS):
-	if (!SDL_GL_SetSwapInterval(-1)) {
-		std::cerr << "NOTE: couldn't set vsync + late swap tearing (" << SDL_GetError() << ")." << std::endl;
-		if (!SDL_GL_SetSwapInterval(1)) {
-			std::cerr << "NOTE: couldn't set vsync (" << SDL_GetError() << ")." << std::endl;
-		}
-	}
+	// //Set VSYNC + Late Swap (prevents crazy FPS):
+	// if (!SDL_GL_SetSwapInterval(-1)) {
+	// 	std::cerr << "NOTE: couldn't set vsync + late swap tearing (" << SDL_GetError() << ")." << std::endl;
+	// 	if (!SDL_GL_SetSwapInterval(1)) {
+	// 		std::cerr << "NOTE: couldn't set vsync (" << SDL_GetError() << ")." << std::endl;
+	// 	}
+	// }
 
 	//Hide mouse cursor (note: showing can be useful for debugging):
 	//SDL_ShowCursor(SDL_DISABLE);
@@ -167,6 +167,10 @@ int main(int argc, char **argv) {
 		}
 
 		{ //(2) call the current mode's "update" function to deal with elapsed time:
+			// Reference fixed update: https://gafferongames.com/post/fix_your_timestep/
+			static float t = 0.0f; // Want to remember accumulated time
+			float dt = 1.0f / 60.0f; // Fix tick
+
 			auto current_time = std::chrono::high_resolution_clock::now();
 			static auto previous_time = current_time;
 			float elapsed = std::chrono::duration< float >(current_time - previous_time).count();
@@ -175,8 +179,15 @@ int main(int argc, char **argv) {
 			//if frames are taking a very long time to process,
 			//lag to avoid spiral of death:
 			elapsed = std::min(0.1f, elapsed);
+			
+			t += elapsed;
 
-			Mode::current->update(elapsed);
+			// Run as many ticks as there is elapsed time
+			while (t >= dt){
+				Mode::current->update(dt);
+    			t -= dt;
+			}
+
 			if (!Mode::current) break;
 		}
 

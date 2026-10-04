@@ -79,22 +79,31 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 	return false;
 }
 
-void PlayMode::update(float elapsed) {
+void PlayMode::update(float dt) {
 
-	float Tick = 1.0f / 60.0f;
+	// from in-class notes:
+	// Refernced https://gafferongames.com/post/integration_basics/
+	// And also https://lazyfoo.net/tutorials/SDL/44_frame_independent_movement/index.php
+	// float Tick = 1.0f / 60.0f;
 	
-	velocity.x += Tick * acceleration.x;
-	velocity.y += Tick * acceleration.y;
-	position.x += Tick * velocity.x;
-	position.y += Tick * velocity.y;
+	// get acc. from inputs
+	if (left.pressed) acceleration.x = -speed;
+	else if (right.pressed) acceleration.x = speed;
+	else acceleration.x = 0.0f;
+
+	// calc velocity from acc
+	velocity.x += dt * acceleration.x;
+	velocity.y += dt * acceleration.y;
+
+	// calc. position from velocity
+	position.x += dt * velocity.x;
+	position.y += dt * velocity.y;
+
+	// floor
 	if (position.y < 0.0f && velocity.y < 0.0f) {
-		velocity.y = 0.8f * std::abs(velocity.y);
+		velocity.y = 0.8f * std::abs(velocity.y); // https://cplusplus.com/reference/cmath/abs/
 		position.y = 0.0f;
 	}
-
-
-	if (left.pressed) position.x -= velocity.x * elapsed;
-	if (right.pressed) position.x +=  velocity.x * elapsed;
 
 	//reset button press counters:
 	left.downs = 0;
