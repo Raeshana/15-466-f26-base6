@@ -25,15 +25,19 @@ struct PlayMode : Mode {
 		uint8_t pressed = 0;
 	} left, right, down, up;
 
-	//----- game state -----
-
 	//some weird background animation:
 	float background_fade = 0.0f;
 
-	//player position:
-	glm::vec2 player_at = glm::vec2(0.0f);
+	// player stuff:
+	// Referenced https://gafferongames.com/post/integration_basics/
+	float mass = 10.0f;
+	glm::vec2 position = glm::vec2(100.0f, 1.0f); 
+	glm::vec2 velocity = glm::vec2(100.0f, 0.0f);     
+	glm::vec2 acceleration = glm::vec2(0.0f, -10.0f); // gravity
+
+	// tilemap:
+
 
 	//----- drawing handled by PPU466 -----
-
 	PPU466 ppu;
 };
