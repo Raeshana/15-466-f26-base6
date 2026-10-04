@@ -81,12 +81,17 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 void PlayMode::update(float elapsed) {
 
-	velocity += acceleration * elapsed;
+	float Tick = 1.0f / 60.0f;
 	
-	// floor
-	if (position.y <= 0.0f){
-		velocity.y = -velocity.y;
+	velocity.x += Tick * acceleration.x;
+	velocity.y += Tick * acceleration.y;
+	position.x += Tick * velocity.x;
+	position.y += Tick * velocity.y;
+	if (position.y < 0.0f && velocity.y < 0.0f) {
+		velocity.y = 0.8f * std::abs(velocity.y);
+		position.y = 0.0f;
 	}
+
 
 	if (left.pressed) position.x -= velocity.x * elapsed;
 	if (right.pressed) position.x +=  velocity.x * elapsed;
