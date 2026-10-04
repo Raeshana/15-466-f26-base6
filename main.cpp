@@ -64,15 +64,15 @@ int main(int argc, char **argv) {
 
 	//create window:
 	Mode::window = SDL_CreateWindow(
-		"gp26 game6: physics", //TODO: remember to set a title for your game!
-		1280, 720, //TODO: modify window size if you'd like
+		"gp26 game1: remember to change your title", //TODO: remember to set a title for your game!
+		2*PPU466::ScreenWidth + 8, 2*PPU466::ScreenHeight + 8, //TODO: modify window size if you'd like
 		SDL_WINDOW_OPENGL
 		| SDL_WINDOW_RESIZABLE //uncomment to allow resizing
 		| SDL_WINDOW_HIGH_PIXEL_DENSITY //uncomment for full resolution on high-DPI screens
 	);
 
 	//prevent exceedingly tiny windows when resizing:
-	SDL_SetWindowMinimumSize(Mode::window,100,100);
+	SDL_SetWindowMinimumSize(Mode::window, PPU466::ScreenWidth, PPU466::ScreenHeight);
 
 	if (!Mode::window) {
 		std::cerr << "Error creating SDL window: " << SDL_GetError() << std::endl;
@@ -98,9 +98,6 @@ int main(int argc, char **argv) {
 			std::cerr << "NOTE: couldn't set vsync (" << SDL_GetError() << ")." << std::endl;
 		}
 	}
-
-	//Set automatic SRGB encoding if framebuffer needs it:
-	glEnable(GL_FRAMEBUFFER_SRGB);
 
 	//Hide mouse cursor (note: showing can be useful for debugging):
 	//SDL_ShowCursor(SDL_DISABLE);

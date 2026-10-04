@@ -117,7 +117,8 @@ if (maek.OS === 'windows') {
 const game_names = [
 	maek.CPP('PlayMode.cpp'),
 	maek.CPP('main.cpp'),
-	maek.CPP('LitColorTextureProgram.cpp')
+	maek.CPP('LitColorTextureProgram.cpp'),
+	maek.CPP('PPU466.cpp'),
 	//, maek.CPP('ColorTextureProgram.cpp')  //not used right now, but you might want it
 ];
 
@@ -133,7 +134,7 @@ const common_names = [
 	maek.CPP('gl_compile_program.cpp'),
 	maek.CPP('Mode.cpp'),
 	maek.CPP('GL.cpp'),
-	maek.CPP('Load.cpp')
+	maek.CPP('Load.cpp'),
 ];
 
 const show_mesh_names = [
