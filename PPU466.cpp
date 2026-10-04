@@ -67,16 +67,22 @@ Load< PPUDataStream > data_stream(LoadTagDefault);
 
 PPU466::PPU466() {
 	for (auto &palette : palette_table) {
-		palette[0] = glm::u8vec4(0x00, 0x00, 0x00, 0x00); //
+		palette[0] = glm::u8vec4(0xff, 0xff, 0xff, 0xff); // black
+		palette[1] = glm::u8vec4(0xff, 0x00, 0x00, 0xff); // red
 	}
 
 	for (auto &tile : tile_table) {
-		tile.bit0 = { 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0 };
-		tile.bit1 = { 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff };
+		tile.bit0 = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+		tile.bit1 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	}
 
-	for (uint32_t i = 0; i < background.size(); ++i) {
-		background[i] = int16_t(0x8);
+	// floor
+	for (uint32_t i = 0; i < BackgroundWidth * (BackgroundHeight/4); i++) {
+		background[i] = int16_t(0x1 << 8);
+	}
+
+	for (uint32_t i = BackgroundWidth * (BackgroundHeight/4); i < background.size(); ++i) {
+		background[i] = int16_t(0x0);
 	}
 }
 
