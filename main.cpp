@@ -91,13 +91,13 @@ int main(int argc, char **argv) {
 	//On windows, load OpenGL entrypoints: (does nothing on other platforms)
 	init_GL();
 
-	// //Set VSYNC + Late Swap (prevents crazy FPS):
-	// if (!SDL_GL_SetSwapInterval(-1)) {
-	// 	std::cerr << "NOTE: couldn't set vsync + late swap tearing (" << SDL_GetError() << ")." << std::endl;
-	// 	if (!SDL_GL_SetSwapInterval(1)) {
-	// 		std::cerr << "NOTE: couldn't set vsync (" << SDL_GetError() << ")." << std::endl;
-	// 	}
-	// }
+	//Set VSYNC + Late Swap (prevents crazy FPS):
+	if (!SDL_GL_SetSwapInterval(-1)) {
+		std::cerr << "NOTE: couldn't set vsync + late swap tearing (" << SDL_GetError() << ")." << std::endl;
+		if (!SDL_GL_SetSwapInterval(1)) {
+			std::cerr << "NOTE: couldn't set vsync (" << SDL_GetError() << ")." << std::endl;
+		}
+	}
 
 	//Hide mouse cursor (note: showing can be useful for debugging):
 	//SDL_ShowCursor(SDL_DISABLE);
@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
 			//if frames are taking a very long time to process,
 			//lag to avoid spiral of death:
 			elapsed = std::min(0.1f, elapsed);
-			
+
 			t += elapsed;
 
 			// Run as many ticks as there is elapsed time
