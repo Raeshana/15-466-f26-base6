@@ -154,43 +154,47 @@ void PPU466::draw(glm::uvec2 const &drawable_size) const {
 	draw_sprites(0x80); //draw sprites with priority == 1 ('behind' sprites)
 
 	{ //draw the background:
-		//To simulate the 'infinite tiling' behavior this code draws the background as four screen-sized chunks,
-		// each of which is drawn at an offset that causes it to overlap the screen.
 
 		static_assert(BackgroundWidth * 8 == ScreenWidth * 2, "Background should be exactly twice the screen width.");
 		static_assert(BackgroundHeight * 8 == ScreenHeight * 2, "Background should be exactly twice the screen height.");
 
-		for (int32_t chunk_y : {0, int32_t(ScreenHeight)}) {
-			for (int32_t chunk_x : {0, int32_t(ScreenWidth)}) {
-				//position of the lower-left corner of the chunk:
-				glm::ivec2 pos = glm::ivec2(chunk_x, chunk_y) + background_position;
 
-				constexpr int32_t BackgroundWidthPixels = int32_t(BackgroundWidth) * 8;
-				constexpr int32_t BackgroundHeightPixels = int32_t(BackgroundHeight) * 8;
-
-				//reduce to (-BackgroundWidthPixels,0] x (-BackgroundHeightPixels,0]:
-				pos.x = ((pos.x % BackgroundWidthPixels) - BackgroundWidthPixels) % BackgroundWidthPixels;
-				pos.y = ((pos.y % BackgroundHeightPixels) - BackgroundHeightPixels) % BackgroundHeightPixels;
-
-				//move chunk if it doesn't overlap the screen:
-				if (pos.x + int32_t(ScreenWidth) <= 0) pos.x += BackgroundWidthPixels;
-				if (pos.y + int32_t(ScreenHeight) <= 0) pos.y += BackgroundHeightPixels;
-
-				int32_t ox = chunk_x / 8;
-				int32_t oy = chunk_y / 8;
-				for (int32_t y = 0; y < int32_t(BackgroundHeight)/2; ++y) {
-					for (int32_t x = 0; x < int32_t(BackgroundWidth)/2; ++x) {
-						uint16_t info = background[(x + ox) + BackgroundWidth * (y + oy)];
-						draw_tile(
-							glm::ivec2(pos.x + 8*x, pos.y + 8*y),
-							info & 0xff, //extract tile index bits
-							(info >> 8) & 0x07 //extract palette index bits
-						);
-					}
-				}
-
+		for (int32_t y = 0; y < int32_t(BackgroundHeight); ++y) {
+			for (int32_t x = 0; x < int32_t(BackgroundWidth); ++x) {
+				uint16_t info = background[(x) + BackgroundWidth * (y)];
+				draw_tile(
+					glm::ivec2(8*x, 8*y),
+					info & 0xff, //extract tile index bits
+					(info >> 8) & 0x07 //extract palette index bits
+				);
 			}
 		}
+
+		// for (int32_t chunk_y : {0, int32_t(ScreenHeight)}) {
+		// 	for (int32_t chunk_x : {0, int32_t(ScreenWidth)}) {
+		// 		//position of the lower-left corner of the chunk:
+		// 		glm::ivec2 pos = glm::ivec2(chunk_x, chunk_y) + background_position;
+
+		// 		constexpr int32_t BackgroundWidthPixels = int32_t(BackgroundWidth) * 8;
+		// 		constexpr int32_t BackgroundHeightPixels = int32_t(BackgroundHeight) * 8;
+
+		// 		//reduce to (-BackgroundWidthPixels,0] x (-BackgroundHeightPixels,0]:
+		// 		pos.x = ((pos.x % BackgroundWidthPixels) - BackgroundWidthPixels) % BackgroundWidthPixels;
+		// 		pos.y = ((pos.y % BackgroundHeightPixels) - BackgroundHeightPixels) % BackgroundHeightPixels;
+
+		// 		for (int32_t y = 0; y < int32_t(BackgroundHeight)/2; ++y) {
+		// 			for (int32_t x = 0; x < int32_t(BackgroundWidth)/2; ++x) {
+		// 				uint16_t info = background[(x) + BackgroundWidth * (y)];
+		// 				draw_tile(
+		// 					glm::ivec2(pos.x + 8*x, pos.y + 8*y),
+		// 					info & 0xff, //extract tile index bits
+		// 					(info >> 8) & 0x07 //extract palette index bits
+		// 				);
+		// 			}
+		// 		}
+
+		// 	}
+		// }
 	}
 
 	draw_sprites(0x00); //draw sprites with priority == 0 ('in front' sprites)

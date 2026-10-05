@@ -94,7 +94,6 @@ void PlayMode::update(float dt) {
 	// from in-class notes:
 	// Refernced https://gafferongames.com/post/integration_basics/
 	// And also https://lazyfoo.net/tutorials/SDL/44_frame_independent_movement/index.php
-	// float Tick = 1.0f / 60.0f;
 	
 	// get acc. from inputs
 	if (left.pressed) acceleration.x = -speed;
@@ -109,8 +108,15 @@ void PlayMode::update(float dt) {
 	position.x += dt * velocity.x;
 	position.y += dt * velocity.y;
 
+	// check player collision with actual floor
+	uint32_t background_idx = (uint32_t)position.x + ppu.BackgroundWidth * (uint32_t)position.y;
+	if (ppu.background[background_idx] == int16_t(0b11 << 8)) { 
+		std::cout << "on red tile";
+	}
+	// (info >> 8) & 0x07 //extract palette index bits
+
 	// floor
-	if (position.y < 0.0f && velocity.y < 0.0f) {
+	if (position.y < 0 && velocity.y < 0.0f) {
 		velocity.y = 0.8f * std::abs(velocity.y); // https://cplusplus.com/reference/cmath/abs/
 		position.y = 0.0f;
 	}
@@ -143,16 +149,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	ppu.sprites[0].y = int8_t(position.y);
 	ppu.sprites[0].index = 32;
 	ppu.sprites[0].attributes = 7;
-
-	//some other misc sprites:
-	// for (uint32_t i = 1; i < 63; ++i) {
-	// 	float amt = (i + 2.0f * background_fade) / 62.0f;
-	// 	ppu.sprites[i].x = int8_t(0.5f * float(PPU466::ScreenWidth) + std::cos( 2.0f * M_PI * amt * 5.0f + 0.01f * player_at.x) * 0.4f * float(PPU466::ScreenWidth));
-	// 	ppu.sprites[i].y = int8_t(0.5f * float(PPU466::ScreenHeight) + std::sin( 2.0f * M_PI * amt * 3.0f + 0.01f * player_at.y) * 0.4f * float(PPU466::ScreenWidth));
-	// 	ppu.sprites[i].index = 32;
-	// 	ppu.sprites[i].attributes = 6;
-	// 	if (i % 2) ppu.sprites[i].attributes |= 0x80; //'behind' bit
-	// }
 
 	//--- actually draw ---
 	ppu.draw(drawable_size);
