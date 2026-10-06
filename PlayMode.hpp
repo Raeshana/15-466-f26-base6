@@ -30,10 +30,11 @@ struct PlayMode : Mode {
 	float background_fade = 0.0f;
 
 	// player stuff:
-	float speed = 10.0f;
-	glm::vec2 position = glm::vec2(100.0f, 200.0f); 
-	glm::vec2 velocity = glm::vec2(10.0f, 0.0f);     
-	glm::vec2 acceleration = glm::vec2(0.0f, -10.0f); // gravity
+	float speed_px = 50.0f;
+	float bounce_speed_px = 100.0f;
+	glm::vec2 position_px = glm::vec2(100.0f, 200.0f); 
+	glm::vec2 velocity_px = glm::vec2(0.0f, 0.0f);     
+	glm::vec2 acceleration_px = glm::vec2(0.0f, -64.0f); // gravity
 
 	// tilemap:
 

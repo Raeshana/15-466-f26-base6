@@ -25,7 +25,7 @@ struct PPUTileProgram {
 	GLuint OBJECT_TO_CLIP_mat4 = -1U;
 
 	//Textures bindings:
-	//TEXTURE0 - the tile table (as a 128x128 R8UI texture)
+	//TEXTURE0 - the ti9le table (as a 128x128 R8UI texture)
 	//TEXTURE1 - the palette table (as a 4x8 RGBA8 texture)
 };
 
@@ -66,22 +66,47 @@ Load< PPUDataStream > data_stream(LoadTagDefault);
 //-------------------------------------------------------------------
 
 PPU466::PPU466() {
-	for (auto &palette : palette_table) {
-		palette[0] = glm::u8vec4(0xff, 0xff, 0xff, 0xff); 
-		palette[1] = glm::u8vec4(0xff, 0x00, 0x00, 0xff); 
+	// // temp palettes:
+	palette_table[0] = {
+		glm::u8vec4(0x00, 0x00, 0x00, 0x00), // transparent
+		glm::u8vec4(0x00, 0x00, 0x00, 0xff), // black
+		glm::u8vec4(0x00, 0x00, 0xff, 0xff), // blue
+		glm::u8vec4(0xff, 0x00, 0x00, 0xff), // red
+	};
+
+	// temp tiles:
+	const PPU466::Tile BLUE_TILE = PPU466::Tile{
+		.bit0 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+		.bit1 = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }
+	};
+
+	const PPU466::Tile TRANSPARENT_TILE = PPU466::Tile{
+		.bit0 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
+		.bit1 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
+	};
+
+	const PPU466::Tile RED_TILE = PPU466::Tile{
+		.bit0 = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff },
+		.bit1 = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }
+	};
+
+	tile_table[0] = RED_TILE;
+	tile_table[1] = TRANSPARENT_TILE;
+	tile_table[2] = BLUE_TILE;
+
+	// temp background map
+	for (uint32_t i = 1; i < (uint32_t)(background.size()); ++i) {
+		background[i] = int16_t(0x1);
 	}
 
-	for (auto &tile : tile_table) {
-		tile.bit0 = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
-		tile.bit1 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+	// platform
+	for (uint32_t i = 0; i < 5; ++i) {
+		background[i] = int16_t(0x2);
 	}
 
-	for (uint32_t i = 0; i < (uint32_t)(background.size()/4); ++i) {
-		background[i] = int16_t(0b11 << 8);
-	}
-
-	for (uint32_t i = (uint32_t)(background.size()/4); i < background.size(); ++i) {
-		background[i] = int16_t(0x0);
+	// platform
+	for (uint32_t i = (BackgroundWidth*5) + 5; i < (BackgroundWidth*5) + 10; ++i) {
+		background[i] = int16_t(0x2);
 	}
 }
 
@@ -158,7 +183,6 @@ void PPU466::draw(glm::uvec2 const &drawable_size) const {
 		static_assert(BackgroundWidth * 8 == ScreenWidth * 2, "Background should be exactly twice the screen width.");
 		static_assert(BackgroundHeight * 8 == ScreenHeight * 2, "Background should be exactly twice the screen height.");
 
-
 		for (int32_t y = 0; y < int32_t(BackgroundHeight); ++y) {
 			for (int32_t x = 0; x < int32_t(BackgroundWidth); ++x) {
 				uint16_t info = background[(x) + BackgroundWidth * (y)];
@@ -169,32 +193,6 @@ void PPU466::draw(glm::uvec2 const &drawable_size) const {
 				);
 			}
 		}
-
-		// for (int32_t chunk_y : {0, int32_t(ScreenHeight)}) {
-		// 	for (int32_t chunk_x : {0, int32_t(ScreenWidth)}) {
-		// 		//position of the lower-left corner of the chunk:
-		// 		glm::ivec2 pos = glm::ivec2(chunk_x, chunk_y) + background_position;
-
-		// 		constexpr int32_t BackgroundWidthPixels = int32_t(BackgroundWidth) * 8;
-		// 		constexpr int32_t BackgroundHeightPixels = int32_t(BackgroundHeight) * 8;
-
-		// 		//reduce to (-BackgroundWidthPixels,0] x (-BackgroundHeightPixels,0]:
-		// 		pos.x = ((pos.x % BackgroundWidthPixels) - BackgroundWidthPixels) % BackgroundWidthPixels;
-		// 		pos.y = ((pos.y % BackgroundHeightPixels) - BackgroundHeightPixels) % BackgroundHeightPixels;
-
-		// 		for (int32_t y = 0; y < int32_t(BackgroundHeight)/2; ++y) {
-		// 			for (int32_t x = 0; x < int32_t(BackgroundWidth)/2; ++x) {
-		// 				uint16_t info = background[(x) + BackgroundWidth * (y)];
-		// 				draw_tile(
-		// 					glm::ivec2(pos.x + 8*x, pos.y + 8*y),
-		// 					info & 0xff, //extract tile index bits
-		// 					(info >> 8) & 0x07 //extract palette index bits
-		// 				);
-		// 			}
-		// 		}
-
-		// 	}
-		// }
 	}
 
 	draw_sprites(0x00); //draw sprites with priority == 0 ('in front' sprites)

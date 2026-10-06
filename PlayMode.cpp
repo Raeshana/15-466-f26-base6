@@ -26,36 +26,10 @@ PlayMode::PlayMode() {
 	//use sprite 32 as a "player":
 	ppu.tile_table[32] = PLAYER_TILE;
 
-	//makes the outside of tiles 0-16 solid:
-	ppu.palette_table[0] = {
-		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
-		glm::u8vec4(0x00, 0x00, 0x00, 0xff), // black
-		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
-		glm::u8vec4(0xff, 0x00, 0x00, 0xff), // red
-	};
-
-	//makes the center of tiles 0-16 solid:
-	ppu.palette_table[1] = {
-		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
-		glm::u8vec4(0x00, 0x00, 0x00, 0x00),
-		glm::u8vec4(0x00, 0x00, 0x00, 0xff),
-		glm::u8vec4(0x00, 0x00, 0x00, 0xff),
-	};
-
-	const PPU466::Tile RED_TILE = PPU466::Tile{
-		.bit0 = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff },
-		.bit1 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
-	};
-
-	const PPU466::Tile BLACK_TILE = PPU466::Tile{
-		.bit0 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-		.bit1 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
-	};
-
 	//used for the player:
 	ppu.palette_table[7] = {
 		glm::u8vec4(0x00, 0x00, 0x00, 0x00), // colour 1
-        glm::u8vec4(0xff, 0x00, 0x00, 0xff), // colour 2
+        glm::u8vec4(0xff, 0xff, 0x00, 0xff), // colour 2
         glm::u8vec4(0x00, 0x00, 0x00, 0xff), // colour 3
         glm::u8vec4(0x00, 0x00, 0x00, 0xff), // colour 4
 	};
@@ -94,31 +68,67 @@ void PlayMode::update(float dt) {
 	// from in-class notes:
 	// Refernced https://gafferongames.com/post/integration_basics/
 	// And also https://lazyfoo.net/tutorials/SDL/44_frame_independent_movement/index.php
-	
-	// get acc. from inputs
-	if (left.pressed) acceleration.x = -speed;
-	else if (right.pressed) acceleration.x = speed;
-	else acceleration.x = 0.0f;
 
 	// calc velocity from acc
-	velocity.x += dt * acceleration.x;
-	velocity.y += dt * acceleration.y;
+	velocity_px.y += dt * acceleration_px.y;
+
+	if (left.pressed) velocity_px.x = -speed_px;
+	else if (right.pressed) velocity_px.x = speed_px;
+	else velocity_px.x = 0.0f;
 
 	// calc. position from velocity
-	position.x += dt * velocity.x;
-	position.y += dt * velocity.y;
+	position_px.x += dt * velocity_px.x;
+	position_px.y += dt * velocity_px.y;
 
-	// check player collision with actual floor
-	uint32_t background_idx = (uint32_t)position.x + ppu.BackgroundWidth * (uint32_t)position.y;
-	if (ppu.background[background_idx] == int16_t(0b11 << 8)) { 
-		std::cout << "on red tile";
+	// don't let player go out of frame
+	if (position_px.x <= 0.0f) position_px.x = 0.0f;
+	if ((position_px.x + 8.0f >= (float)ppu.ScreenWidth)) {
+		position_px.x = (float)ppu.ScreenWidth - 8.0f;
 	}
-	// (info >> 8) & 0x07 //extract palette index bits
+	if (position_px.y < 0) position_px.y = 0.0f;
+	if ((position_px.y + 8.0f >= (float)ppu.ScreenWidth)) {
+		position_px.y = (float)ppu.ScreenWidth - 8.0f;
+	}
 
-	// floor
-	if (position.y < 0 && velocity.y < 0.0f) {
-		velocity.y = 0.8f * std::abs(velocity.y); // https://cplusplus.com/reference/cmath/abs/
-		position.y = 0.0f;
+	// collision check code
+	// bottom-left
+	uint32_t tile_x = (uint32_t)(position_px.x / 8);
+	uint32_t tile_y = (uint32_t)(position_px.y / 8);
+	uint32_t background_idx = tile_x + ppu.BackgroundWidth * tile_y;
+	if (ppu.background[background_idx] == 2 && velocity_px.y < 0) { 
+		velocity_px.y = bounce_speed_px; // https://cplusplus.com/reference/cmath/abs/
+		position_px.y = (tile_y * 8.0f) + 8.0f; // position 1 block above tile
+	}
+	
+	// top-left
+	tile_x = (uint32_t)(position_px.x / 8);
+	tile_y = (uint32_t)((position_px.y+16.0) / 8);
+	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
+	if (ppu.background[background_idx] == 2 && velocity_px.y > 0) { 
+		velocity_px.y = 0.8f * (-bounce_speed_px); 
+		// position 2 blocks below tile
+		// since player is 2 blocks tall
+		position_px.y = (tile_y * 8.0f) - 16.0f; 
+	}
+
+	// bottom-right
+	tile_x = (uint32_t)((position_px.x+8) / 8);
+	tile_y = (uint32_t)(position_px.y / 8);
+	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
+	if (ppu.background[background_idx] == 2 && velocity_px.y < 0) { 
+		velocity_px.y = 0.8f * std::abs(bounce_speed_px); // https://cplusplus.com/reference/cmath/abs/
+		position_px.y = (tile_y * 8.0f) + 8.0f; // position 1 block above tile
+	}
+	
+	// top-right
+	tile_x = (uint32_t)((position_px.x+8) / 8);
+	tile_y = (uint32_t)(position_px.y+16 / 8);
+	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
+	if (ppu.background[background_idx] == 2 && velocity_px.y > 0) { 
+		velocity_px.y = 0.8f * (-bounce_speed_px); 
+		// position 2 blocks below tile
+		// since player is 2 blocks tall
+		position_px.y = (tile_y * 8.0f) - 16.0f; 
 	}
 
 	//reset button press counters:
@@ -130,26 +140,61 @@ void PlayMode::update(float dt) {
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//--- set ppu state based on game state ---
-
-	//tilemap gets recomputed every frame as some weird plasma thing:
-	//NOTE: don't do this in your game! actually make a map or something :-)
-	// for (uint32_t y = 0; y < PPU466::BackgroundHeight; ++y) {
-	// 	for (uint32_t x = 0; x < PPU466::BackgroundWidth; ++x) {
-	// 		//TODO: make weird plasma thing
-	// 		ppu.background[x+PPU466::BackgroundWidth*y] = ((x+y)%16);
-	// 	}
-	// }
-
 	//background scroll:
-	ppu.background_position.x = int32_t(-0.5f * position.x);
-	ppu.background_position.y = int32_t(-0.5f * position.y);
+	ppu.background_position.x = int32_t(-0.5f * position_px.x);
+	ppu.background_position.y = int32_t(-0.5f * position_px.y);
 
 	//player sprite:
-	ppu.sprites[0].x = int8_t(position.x);
-	ppu.sprites[0].y = int8_t(position.y);
+	// sprite 1
+	ppu.sprites[0].x = int8_t(position_px.x);
+	ppu.sprites[0].y = int8_t(position_px.y);
 	ppu.sprites[0].index = 32;
 	ppu.sprites[0].attributes = 7;
 
+	// sprite 2
+	ppu.sprites[2].x = int8_t(position_px.x);
+	ppu.sprites[2].y = int8_t(position_px.y + 8.0f);
+	ppu.sprites[2].index = 32;
+	ppu.sprites[2].attributes = 7;
+
 	//--- actually draw ---
 	ppu.draw(drawable_size);
+
+	//text
+	//modified from assignment 5:
+	{
+		//figure out view transform to center:
+		glm::mat4 world_to_clip = glm::mat4(
+			2.0f/(float)ppu.ScreenWidth, 0.0f, 0.0f, 0.0f, // x coord
+			0.0f, 2.0f/(float)ppu.ScreenHeight, 0.0f, 0.0f, // y coord
+			0.0f, 0.0f, 1.0f, 0.0f, // z coord (ignore cus 2D)
+			-1.0f, -1.0f, 0.0f, 1.0f // for 2D
+		);
+
+		DrawLines lines(world_to_clip);
+
+		//helper:
+		auto draw_text = [&](glm::vec2 const &at, std::string const &text, float H) {
+			lines.draw_text(text,
+				glm::vec3(at.x, at.y, 0.0),
+				glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+				glm::u8vec4(0xff, 0xff, 0xff, 0xff));
+			// shadpw
+			// float ofs = (1.0f / 2) / drawable_size.y;
+			// lines.draw_text(text,
+			// 	glm::vec3(at.x + ofs, at.y + ofs, 0.0),
+			// 	glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+			// 	glm::u8vec4(0xff, 0xff, 0xff, 0xff));
+		};
+
+		//floor-lose condition
+		if (position_px.y <= 0 && velocity_px.y < 0.0f) {
+			// display you lose text
+			glm::vec2 textPos;
+			textPos.x = (float)ppu.ScreenWidth/2.0f;
+			textPos.y = (float)ppu.ScreenHeight/2.0f;
+			draw_text(textPos, "You fell. I guess all shooting stars must fall in the end...", 10.0f);
+			// change player sprite to dead player sprite
+		}
+	};
 }
