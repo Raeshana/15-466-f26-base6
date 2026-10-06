@@ -3,9 +3,11 @@
 Author: Raeshana Sookhoo
 
 Design: 
-[SPOILER}
-Takes advantage of double rectangle overlaps to get an upwards boost.
-Is needed to clear all the squares (most times).
+<details> 
+  <summary>[SPOILER] </summary>
+   Takes advantage of double rectangle overlaps to get an upwards boost.
+    Is needed to clear all the squares (most times).
+</details>
 
 Screen Shot:
 
