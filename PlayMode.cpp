@@ -89,15 +89,33 @@ void PlayMode::update(float dt) {
 	if ((position_px.y + 8.0f >= (float)ppu.ScreenWidth)) {
 		position_px.y = (float)ppu.ScreenWidth - 8.0f;
 	}
+	
+	// delete platform
+	// check if neighbouring tiles are also platform tiles
+	//helper:
+	uint32_t tile_x;
+	uint32_t tile_y;
+	uint32_t background_idx;
+	std::function<void(uint32_t, uint32_t)> delete_platform = 
+		[&](uint32_t tile_x, uint32_t tile_y) {
+		background_idx = tile_x + ppu.BackgroundWidth * tile_y;
+		if (ppu.background[background_idx] == 2) {
+			ppu.background[background_idx] = 1;
+			// uint can't be -ve!!!
+			if (tile_x > 0) delete_platform(tile_x - 1, tile_y);
+			if (tile_x < ppu.ScreenWidth) delete_platform(tile_x + 1, tile_y);
+		}
+	};	
 
 	// collision check code
 	// bottom-left
-	uint32_t tile_x = (uint32_t)(position_px.x / 8);
-	uint32_t tile_y = (uint32_t)(position_px.y / 8);
-	uint32_t background_idx = tile_x + ppu.BackgroundWidth * tile_y;
+	tile_x = (uint32_t)(position_px.x / 8);
+	tile_y = (uint32_t)(position_px.y / 8);
+	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
 	if (ppu.background[background_idx] == 2 && velocity_px.y < 0) { 
 		velocity_px.y = bounce_speed_px; // https://cplusplus.com/reference/cmath/abs/
 		position_px.y = (tile_y * 8.0f) + 8.0f; // position 1 block above tile
+		delete_platform(tile_x, tile_y);
 	}
 	
 	// top-left
@@ -109,6 +127,7 @@ void PlayMode::update(float dt) {
 		// position 2 blocks below tile
 		// since player is 2 blocks tall
 		position_px.y = (tile_y * 8.0f) - 16.0f; 
+		delete_platform(tile_x, tile_y);
 	}
 
 	// bottom-right
@@ -118,6 +137,7 @@ void PlayMode::update(float dt) {
 	if (ppu.background[background_idx] == 2 && velocity_px.y < 0) { 
 		velocity_px.y = 0.8f * std::abs(bounce_speed_px); // https://cplusplus.com/reference/cmath/abs/
 		position_px.y = (tile_y * 8.0f) + 8.0f; // position 1 block above tile
+		delete_platform(tile_x, tile_y);
 	}
 	
 	// top-right
@@ -129,6 +149,7 @@ void PlayMode::update(float dt) {
 		// position 2 blocks below tile
 		// since player is 2 blocks tall
 		position_px.y = (tile_y * 8.0f) - 16.0f; 
+		delete_platform(tile_x, tile_y);
 	}
 
 	//reset button press counters:
