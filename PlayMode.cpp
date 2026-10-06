@@ -25,6 +25,10 @@
 // #include <random>
 
 PlayMode::PlayMode() {
+	// initialize rand seed
+	// Ref https://www.geeksforgeeks.org/cpp/rand-and-srand-in-ccpp/
+	srand((unsigned int)time(nullptr));
+
 	// put palettes into palette table
 	ppu.palette_table[0] = player_palette;
 	ppu.palette_table[1] = default_palette;
