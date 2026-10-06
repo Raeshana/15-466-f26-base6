@@ -31,8 +31,8 @@ struct PlayMode : Mode {
 
 	// player stuff:
 	float speed_px = 50.0f;
-	float bounce_speed_px = 100.0f;
-	glm::vec2 position_px = glm::vec2(100.0f, 200.0f); 
+	float bounce_speed_px = 70.0f;
+	glm::vec2 position_px = glm::vec2((ppu.ScreenWidth/2), 20+8); 
 	glm::vec2 velocity_px = glm::vec2(0.0f, 0.0f);     
 	glm::vec2 acceleration_px = glm::vec2(0.0f, -64.0f); // gravity
 

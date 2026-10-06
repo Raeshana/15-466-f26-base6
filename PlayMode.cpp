@@ -48,7 +48,7 @@ PlayMode::PlayMode() {
 
 	// generate platforms as sprites
 	uint32_t sprite_idx = 10;
-	for (uint32_t y = 20; y < ppu.ScreenHeight && sprite_idx + 4 < 64; y += 24) {
+	for (uint32_t y = 20; y < (float)ppu.ScreenHeight - 20.0f && sprite_idx + 4 < 64; y += 24) {
 	// get a random x value on the screen
 	// we dont have to worry about drawing 'off the screen'
 	// since background = 2*width
@@ -141,7 +141,7 @@ void PlayMode::update(float dt) {
         	position_px.y <= sprite_y + 8.0f && // bottom of player overlaps top of sprite
 			position_px.x + 16.0f >= sprite_x && // ensure player right is further than sprite left
     		position_px.x <= sprite_x + 8.0f && // ensure player right is further than sprite left
-			position_px.y + 16.0f >= sprite_y) { // ensure top of player is above the sprite
+			position_px.y + 16.0f >= sprite_y) { // ensure top of player is above the sprite bottom
 			
 			velocity_px.y = bounce_speed_px;
 			position_px.y = sprite_y + 8.0f;
@@ -153,12 +153,12 @@ void PlayMode::update(float dt) {
 
 		// hit head
 		if (velocity_px.y > 0.0f && // jumping (+ve)
-				position_px.y + 16.0f >= sprite_y && // top of player overlaps bottom of sprite
-				position_px.x + 16.0f >= sprite_x && // ensure player right is further than sprite left
-				position_px.x <= sprite_x + 8.0f && // ensure top of player is above the sprite
-				position_px.y <= sprite_y) { // ensure bottom of player is below the sprite
+			position_px.y + 16.0f >= sprite_y && // top of player overlaps bottom of sprite
+			position_px.x + 16.0f >= sprite_x && // ensure player right is further than sprite left
+			position_px.x <= sprite_x + 8.0f && // ensure player left is further than the sprite right
+			position_px.y <= sprite_y + 8.0f) { // ensure bottom of player is below the sprite top
 			
-			velocity_px.y = -0.8f * bounce_speed_px;
+			velocity_px.y = -0.2f * bounce_speed_px;
 			position_px.y = sprite_y - 16.0f;
 
 			// ignore platform-- transparent
@@ -218,6 +218,12 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	ppu.sprites[6].y;
 	ppu.sprites[6].index = 3;
 	ppu.sprites[6].attributes = 1;
+
+	// starting cloud
+	ppu.sprites[7].x = (ppu.ScreenWidth/2);
+	ppu.sprites[7].y = 20;
+	ppu.sprites[7].index = 30;
+	ppu.sprites[7].attributes = 3;
 
 	//--- actually draw ---
 	ppu.draw(drawable_size);
