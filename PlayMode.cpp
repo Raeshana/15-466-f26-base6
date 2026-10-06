@@ -164,7 +164,7 @@ void PlayMode::update(float dt) {
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//--- set ppu state based on game state ---
 	//background scroll:
-	ppu.background_position.x = int32_t(-0.5f * position_px.x);
+	// ppu.background_position.x = int32_t(-0.5f * position_px.x);
 	ppu.background_position.y = int32_t(-0.5f * position_px.y);
 
 	//player sprite:
