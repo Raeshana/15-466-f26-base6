@@ -44,7 +44,7 @@ PlayMode::PlayMode() {
 
 	// generate platforms as sprites
 	uint32_t sprite_idx = 10;
-	for (uint32_t y = 24; y < ppu.ScreenHeight && sprite_idx + 4 < 64; y += 24) {
+	for (uint32_t y = 20; y < ppu.ScreenHeight && sprite_idx + 4 < 64; y += 24) {
 	// get a random x value on the screen
 	// we dont have to worry about drawing 'off the screen'
 	// since background = 2*width
@@ -108,13 +108,18 @@ void PlayMode::update(float dt) {
 	position_px.y += dt * velocity_px.y;
 
 	// don't let player go out of frame
-	if (position_px.x <= 0.0f) position_px.x = 0.0f;
-	if ((position_px.x + 8.0f >= (float)ppu.ScreenWidth)) {
-		position_px.x = (float)ppu.ScreenWidth - 8.0f;
+	if (position_px.x <= 0.0f) {
+		position_px.x = 0.0f;
+		velocity_px.x = 0.5f * -velocity_px.x;
+	}
+	if ((position_px.x + 16.0f >= (float)ppu.ScreenWidth)) {
+		position_px.x = (float)ppu.ScreenWidth - 16.0f;
+		velocity_px.x = 0.5f * -velocity_px.x;
 	}
 	if (position_px.y < 0) position_px.y = 0.0f;
-	if ((position_px.y + 8.0f >= (float)ppu.ScreenWidth)) {
-		position_px.y = (float)ppu.ScreenWidth - 8.0f;
+	if ((position_px.y + 16.0f >= (float)ppu.ScreenHeight)) {
+		position_px.y = (float)ppu.ScreenHeight - 16.0f;
+		velocity_px.y = 0.5f * -velocity_px.y;
 	}
 
 	// collision check code
@@ -126,33 +131,35 @@ void PlayMode::update(float dt) {
 
 		float sprite_x = ppu.sprites[i].x;
 		float sprite_y = ppu.sprites[i].y;
-
+		
 		// falling 
-		if (velocity_px.y < 0.0f &&
-			position_px.x + 16.0f > sprite_x &&
-			position_px.x < sprite_x + 8.0f &&
-			position_px.y <= sprite_y + 8.0f &&
-			position_px.y + 16.0f >= sprite_y) {
-
+		if (velocity_px.y < 0.0f && // falling (-ve)
+        	position_px.y <= sprite_y + 8.0f && // bottom of player overlaps top of sprite
+			position_px.x + 16.0f >= sprite_x && // ensure player right is further than sprite left
+    		position_px.x <= sprite_x + 8.0f && // ensure player right is further than sprite left
+			position_px.y + 16.0f >= sprite_y) { // ensure top of player is above the sprite
+			
 			velocity_px.y = bounce_speed_px;
 			position_px.y = sprite_y + 8.0f;
 
 			// ignore platform-- transparent
 			ppu.sprites[i] = ppu.sprites[6];
+			break;
 		}
 
 		// hit head
-		else if (velocity_px.y > 0.0f &&
-				position_px.x + 16.0f > sprite_x &&
-				position_px.x < sprite_x + 8.0f &&
-				position_px.y + 16.0f >= sprite_y &&
-				position_px.y <= sprite_y + 8.0f) {
-
+		if (velocity_px.y > 0.0f && // jumping (+ve)
+				position_px.y + 16.0f >= sprite_y && // top of player overlaps bottom of sprite
+				position_px.x + 16.0f >= sprite_x && // ensure player right is further than sprite left
+				position_px.x <= sprite_x + 8.0f && // ensure top of player is above the sprite
+				position_px.y <= sprite_y) { // ensure bottom of player is below the sprite
+			
 			velocity_px.y = -0.8f * bounce_speed_px;
 			position_px.y = sprite_y - 16.0f;
 
 			// ignore platform-- transparent
 			ppu.sprites[i] = ppu.sprites[6];
+			break;
 		}
 	}
 
