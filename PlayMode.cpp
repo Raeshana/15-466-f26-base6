@@ -43,7 +43,7 @@ PlayMode::PlayMode() {
 	ppu.tile_table[35] = PLAYER_TILE_4;
 
 	// generate platforms as sprites
-	uint32_t sprite_idx = 5;
+	uint32_t sprite_idx = 10;
 	for (uint32_t y = 24; y < ppu.ScreenHeight && sprite_idx + 4 < 64; y += 24) {
 	// get a random x value on the screen
 	// we dont have to worry about drawing 'off the screen'
@@ -250,15 +250,21 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			// change player sprite to dead player sprite
 		}
 
-		if (position_px.x + 4.0f >= ppu.sprites[3].x &&
-			position_px.x + 4.0f <= ppu.sprites[3].x + 8.0f &&
-			position_px.y + 4.0f >= ppu.sprites[3].y &&
-			position_px.y + 4.0f <= ppu.sprites[3].y + 8.0f)
-		{
+		// win condition
+		// if the player has removed all the blocks:
+		bool can_win = true;
+		for (int i = 10; i < 64; i++) {
+			if (ppu.sprites[i].index == 30) { // cloud idx 30
+			can_win = can_win & false;
+			break; // we just need 1 false
+		}
+		if (can_win) {
 			draw_text(textPos, "For the first time, it is you who gets to make a wish. You win.", 10.0f);
 			velocity_px.x = 0.0f;
 			velocity_px.y = 0.0f;
 			acceleration_px.y = 0.0f;
+		}
+
 		}
 	};
 }
