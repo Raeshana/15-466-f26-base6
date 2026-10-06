@@ -78,7 +78,7 @@ PPU466::PPU466() {
 	// put tiles into tile table
 	tile_table[1] = STARS_TILE_1;
 	tile_table[2] = STARS_TILE_2;
-	tile_table[3] = STARS_TILE_3;
+	tile_table[3] = STARS_TILE_3; // transparent
 	tile_table[4] = STARS_TILE_4;
 	tile_table[30] = CLOUD;
 	tile_table[32] = PLAYER_TILE_1;

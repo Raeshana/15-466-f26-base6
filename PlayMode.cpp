@@ -29,26 +29,37 @@ PlayMode::PlayMode() {
 	ppu.palette_table[0] = player_palette;
 	ppu.palette_table[1] = default_palette;
 	ppu.palette_table[2] = background_palette;
+	ppu.palette_table[3] = cloud_palette;
 
 	// put tiles into tile table
 	ppu.tile_table[1] = STARS_TILE_1;
 	ppu.tile_table[2] = STARS_TILE_2;
 	ppu.tile_table[3] = STARS_TILE_3;
 	ppu.tile_table[4] = STARS_TILE_4;
+	ppu.tile_table[30] = CLOUD;
 	ppu.tile_table[32] = PLAYER_TILE_1;
 	ppu.tile_table[33] = PLAYER_TILE_2;
 	ppu.tile_table[34] = PLAYER_TILE_3;
 	ppu.tile_table[35] = PLAYER_TILE_4;
 
-	// platform
-	for (uint32_t i = 0; i < 5; ++i) {
-		ppu.background[i] = 4 << 8| 30;;
-	}
+	// generate platforms as sprites
+	uint32_t sprite_idx = 5;
+	for (uint32_t y = 24; y < ppu.ScreenHeight && sprite_idx + 4 < 64; y += 24) {
+	// get a random x value on the screen
+	// we dont have to worry about drawing 'off the screen'
+	// since background = 2*width
+    uint32_t platform_x = rand() % (ppu.ScreenWidth - 40);
 
-	// // platform
-	// for (uint32_t i = (BackgroundWidth*5) + 5; i < (BackgroundWidth*5) + 10; ++i) {
-	// 	ppu.background[i] = int16_t(0x2);
-	// }
+	//draw sprites (5 wide)
+    for (uint32_t i = 0; i < 5; ++i) {
+        ppu.sprites[sprite_idx].x = (uint8_t)(platform_x + i * 8.0f); // tile is 8 px
+        ppu.sprites[sprite_idx].y = (uint8_t)y;
+        ppu.sprites[sprite_idx].index = 30;
+        ppu.sprites[sprite_idx].attributes = 3;
+
+        sprite_idx++;
+    }
+}
 }
 
 PlayMode::~PlayMode() {
@@ -105,67 +116,44 @@ void PlayMode::update(float dt) {
 	if ((position_px.y + 8.0f >= (float)ppu.ScreenWidth)) {
 		position_px.y = (float)ppu.ScreenWidth - 8.0f;
 	}
-	
-	// delete platform
-	// check if neighbouring tiles are also platform tiles
-	//helper:
-	uint32_t tile_x;
-	uint32_t tile_y;
-	uint32_t background_idx;
-	std::function<void(uint32_t, uint32_t)> delete_platform = 
-		[&](uint32_t tile_x, uint32_t tile_y) {
-		background_idx = tile_x + ppu.BackgroundWidth * tile_y;
-		if (ppu.background[background_idx] == (4 << 8 | 30)) {
-			ppu.background[background_idx] = 1;
-			// uint can't be -ve!!!
-			if (tile_x > 0) delete_platform(tile_x - 1, tile_y);
-			if (tile_x < ppu.ScreenWidth) delete_platform(tile_x + 1, tile_y);
-		}
-	};	
 
 	// collision check code
-	// bottom-left
-	tile_x = (uint32_t)(position_px.x / 8);
-	tile_y = (uint32_t)(position_px.y / 8);
-	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
-	if (ppu.background[background_idx] == (4 << 8 | 30) && velocity_px.y < 0) { 
-		velocity_px.y = bounce_speed_px;
-		position_px.y = (tile_y * 8.0f) + 16.0f; // position 1 block above tile
-		delete_platform(tile_x, tile_y);
-	}
-	
-	// top-left
-	tile_x = (uint32_t)(position_px.x / 8);
-	tile_y = (uint32_t)((position_px.y+15.0) / 8);
-	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
-	if (ppu.background[background_idx] == (4 << 8 | 30) && velocity_px.y > 0) { 
-		velocity_px.y = 0.8f * (-bounce_speed_px); 
-		// position 2 blocks below tile
-		// since player is 2 blocks tall
-		position_px.y = (tile_y * 8.0f) - 16.0f; 
-		delete_platform(tile_x, tile_y);
-	}
+	// as sprites:
+	for (uint32_t i = 5; i < 64; i++) {
 
-	// bottom-right
-	tile_x = (uint32_t)((position_px.x+15.0) / 8);
-	tile_y = (uint32_t)(position_px.y / 8);
-	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
-	if (ppu.background[background_idx] == (4 << 8 | 30) && velocity_px.y < 0) { 
-		velocity_px.y = 0.8f * std::abs(bounce_speed_px); // https://cplusplus.com/reference/cmath/abs/
-		position_px.y = (tile_y * 8.0f) + 8.0f; // position 1 block above tile
-		delete_platform(tile_x, tile_y);
-	}
-	
-	// top-right
-	tile_x = (uint32_t)((position_px.x+15.0) / 8);
-	tile_y = (uint32_t)((position_px.y+15.0) / 8);
-	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
-	if (ppu.background[background_idx] == (4 << 8 | 30) && velocity_px.y > 0) { 
-		velocity_px.y = 0.8f * (-bounce_speed_px); 
-		// position 2 blocks below tile
-		// since player is 2 blocks tall
-		position_px.y = (tile_y * 8.0f) - 16.0f; 
-		delete_platform(tile_x, tile_y);
+		// skip unused sprites
+		if (ppu.sprites[i].index != 30) continue;
+
+		float sprite_x = ppu.sprites[i].x;
+		float sprite_y = ppu.sprites[i].y;
+
+		// falling 
+		if (velocity_px.y < 0.0f &&
+			position_px.x + 16.0f > sprite_x &&
+			position_px.x < sprite_x + 8.0f &&
+			position_px.y <= sprite_y + 8.0f &&
+			position_px.y + 16.0f >= sprite_y) {
+
+			velocity_px.y = bounce_speed_px;
+			position_px.y = sprite_y + 8.0f;
+
+			// ignore platform-- transparent
+			ppu.sprites[i] = ppu.sprites[6];
+		}
+
+		// hit head
+		else if (velocity_px.y > 0.0f &&
+				position_px.x + 16.0f > sprite_x &&
+				position_px.x < sprite_x + 8.0f &&
+				position_px.y + 16.0f >= sprite_y &&
+				position_px.y <= sprite_y + 8.0f) {
+
+			velocity_px.y = -0.8f * bounce_speed_px;
+			position_px.y = sprite_y - 16.0f;
+
+			// ignore platform-- transparent
+			ppu.sprites[i] = ppu.sprites[6];
+		}
 	}
 
 	//reset button press counters:
@@ -212,7 +200,13 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	ppu.sprites[5].x;
 	ppu.sprites[5].y;
 	ppu.sprites[5].index = 30;
-	ppu.sprites[5].attributes = 4;
+	ppu.sprites[5].attributes = 3;
+
+	// nothing
+	ppu.sprites[6].x;
+	ppu.sprites[6].y;
+	ppu.sprites[6].index = 3;
+	ppu.sprites[6].attributes = 1;
 
 	//--- actually draw ---
 	ppu.draw(drawable_size);
