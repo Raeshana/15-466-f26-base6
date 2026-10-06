@@ -130,7 +130,7 @@ const common_names = [
 	maek.CPP('ColorProgram.cpp'),
 	maek.CPP('Scene.cpp'),
 	maek.CPP('Mesh.cpp'),
-	maek.CPP('load_save_png.cpp'),
+	// maek.CPP('load_save_png.cpp'),
 	maek.CPP('gl_compile_program.cpp'),
 	maek.CPP('Mode.cpp'),
 	maek.CPP('GL.cpp'),
@@ -149,6 +149,12 @@ const show_scene_names = [
 	maek.CPP('ShowSceneMode.cpp')
 ];
 
+// extract tiles pipeline
+const extract_tiles_obj = [
+	maek.CPP('extract_tiles.cpp'),
+	maek.CPP('load_save_png.cpp')
+];
+
 //the '[exeFile =] LINK(objFiles, exeFileBase, [, options])' links an array of objects into an executable:
 // objFiles: array of objects to link
 // exeFileBase: name of executable file to produce
@@ -156,9 +162,10 @@ const show_scene_names = [
 const game_exe = maek.LINK([...game_names, ...common_names], 'dist/game');
 const show_meshes_exe = maek.LINK([...show_mesh_names, ...common_names], 'scenes/show-meshes');
 const show_scene_exe = maek.LINK([...show_scene_names, ...common_names], 'scenes/show-scene');
+const extract_tiles_exe = maek.LINK(extract_tiles_obj, 'dist/extract_tiles');
 
 //set the default target to the game (and copy the readme files):
-maek.TARGETS = [game_exe, show_meshes_exe, show_scene_exe, ...copies];
+maek.TARGETS = [game_exe, show_meshes_exe, show_scene_exe, extract_tiles_exe, ...copies];
 
 //Note that tasks that produce ':abstract targets' are never cached.
 // This is similar to how .PHONY targets behave in make.

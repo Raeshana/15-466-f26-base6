@@ -189,18 +189,14 @@ void PPU466::draw(glm::uvec2 const &drawable_size) const {
 				//position of the lower-left corner of the chunk:
 				glm::ivec2 pos = glm::ivec2(0, chunk_y) + background_position;
 
-				// constexpr int32_t BackgroundWidthPixels = int32_t(BackgroundWidth) * 8;
 				constexpr int32_t BackgroundHeightPixels = int32_t(BackgroundHeight) * 8;
 
 				//reduce to (-BackgroundWidthPixels,0] x (-BackgroundHeightPixels,0]:
-				// pos.x = ((pos.x % BackgroundWidthPixels) - BackgroundWidthPixels) % BackgroundWidthPixels;
 				pos.y = ((pos.y % BackgroundHeightPixels) - BackgroundHeightPixels) % BackgroundHeightPixels;
 
 				//move chunk if it doesn't overlap the screen:
-				// if (pos.x + int32_t(ScreenWidth) <= 0) pos.x += BackgroundWidthPixels;
 				if (pos.y + int32_t(ScreenHeight) <= 0) pos.y += BackgroundHeightPixels;
 
-				// int32_t ox = chunk_x / 8;
 				int32_t oy = chunk_y / 8;
 				for (int32_t y = 0; y < int32_t(BackgroundHeight)/2; ++y) {
 					for (int32_t x = 0; x < int32_t(BackgroundWidth); ++x) {
