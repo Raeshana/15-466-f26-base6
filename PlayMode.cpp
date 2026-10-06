@@ -257,14 +257,13 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			if (ppu.sprites[i].index == 30) { // cloud idx 30
 			can_win = can_win & false;
 			break; // we just need 1 false
+			}
 		}
 		if (can_win) {
 			draw_text(textPos, "For the first time, it is you who gets to make a wish. You win.", 10.0f);
 			velocity_px.x = 0.0f;
 			velocity_px.y = 0.0f;
 			acceleration_px.y = 0.0f;
-		}
-
 		}
 	};
 }
