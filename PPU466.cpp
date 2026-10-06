@@ -9,6 +9,9 @@
 
 #include <vector>
 
+#include "assets.hpp" 
+#include "palettes.hpp"
+
 //In order to implement the PPU466 on modern graphics hardware, a fancy, special purpose tile-drawing shader is used:
 struct PPUTileProgram {
 	PPUTileProgram();
@@ -66,47 +69,34 @@ Load< PPUDataStream > data_stream(LoadTagDefault);
 //-------------------------------------------------------------------
 
 PPU466::PPU466() {
-	// // temp palettes:
-	palette_table[0] = {
-		glm::u8vec4(0x00, 0x00, 0x00, 0x00), // transparent
-		glm::u8vec4(0x00, 0x00, 0x00, 0xff), // black
-		glm::u8vec4(0x00, 0x00, 0xff, 0xff), // blue
-		glm::u8vec4(0xff, 0x00, 0x00, 0xff), // red
-	};
+	// put palettes into palette table
+	palette_table[0] = player_palette;
+	palette_table[1] = default_palette;
+	palette_table[2] = background_palette;
+	palette_table[3] = cloud_palette;
 
-	// temp tiles:
-	const PPU466::Tile BLUE_TILE = PPU466::Tile{
-		.bit0 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-		.bit1 = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }
-	};
+	// put tiles into tile table
+	tile_table[1] = STARS_TILE_1;
+	tile_table[2] = STARS_TILE_2;
+	tile_table[3] = STARS_TILE_3;
+	tile_table[4] = STARS_TILE_4;
+	tile_table[30] = CLOUD;
+	tile_table[32] = PLAYER_TILE_1;
+	tile_table[33] = PLAYER_TILE_2;
+	tile_table[34] = PLAYER_TILE_3;
+	tile_table[35] = PLAYER_TILE_4;
 
-	const PPU466::Tile TRANSPARENT_TILE = PPU466::Tile{
-		.bit0 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-		.bit1 = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
-	};
+	// background
+	uint32_t next_star = rand() % 10;
 
-	const PPU466::Tile RED_TILE = PPU466::Tile{
-		.bit0 = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff },
-		.bit1 = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }
-	};
-
-	tile_table[0] = RED_TILE;
-	tile_table[1] = TRANSPARENT_TILE;
-	tile_table[2] = BLUE_TILE;
-
-	// temp background map
 	for (uint32_t i = 1; i < (uint32_t)(background.size()); ++i) {
-		background[i] = int16_t(0x1);
-	}
-
-	// platform
-	for (uint32_t i = 0; i < 5; ++i) {
-		background[i] = int16_t(0x2);
-	}
-
-	// platform
-	for (uint32_t i = (BackgroundWidth*5) + 5; i < (BackgroundWidth*5) + 10; ++i) {
-		background[i] = int16_t(0x2);
+		if (i == next_star) {
+			background[i] = int16_t(2 << 8 | 4); // background stars
+			next_star = i + 5 + rand() % 15; // next star in 5–19 tiles
+		}
+		else {
+			background[i] = int16_t(1 << 8 | (1+(rand()%3))); // stars behind
+		}
 	}
 }
 
@@ -182,7 +172,7 @@ void PPU466::draw(glm::uvec2 const &drawable_size) const {
 		//To simulate the 'infinite tiling' behavior this code draws the background as 2 screen-sized chunks (vertical),
 		// each of which is drawn at an offset that causes it to overlap the screen.
 
-		static_assert(BackgroundWidth * 8 == ScreenWidth, "Background should be exactly the screen width.");
+		static_assert(BackgroundWidth * 8 == ScreenWidth * 2, "Background should be exactly twice the screen width.");
 		static_assert(BackgroundHeight * 8 == ScreenHeight * 2, "Background should be exactly twice the screen height.");
 
 		for (int32_t chunk_y : {0, int32_t(ScreenHeight)}) {

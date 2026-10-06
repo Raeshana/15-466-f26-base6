@@ -20,21 +20,35 @@
 #include "gl_errors.hpp"
 #include "data_path.hpp"
 
+#include "palettes.hpp"
+
 // #include <random>
 
 PlayMode::PlayMode() {
-	//use sprite 32 as a "player":
-	ppu.tile_table[32] = PLAYER_TILE;
-	//use sprite 31 as a "win condition"
-	ppu.tile_table[31] = PLAYER_TILE;
+	// put palettes into palette table
+	ppu.palette_table[0] = player_palette;
+	ppu.palette_table[1] = default_palette;
+	ppu.palette_table[2] = background_palette;
 
-	//used for the player:
-	ppu.palette_table[7] = {
-		glm::u8vec4(0x00, 0x00, 0x00, 0x00), // colour 1
-        glm::u8vec4(0xff, 0xff, 0x00, 0xff), // colour 2
-        glm::u8vec4(0x00, 0x00, 0x00, 0xff), // colour 3
-        glm::u8vec4(0x00, 0x00, 0x00, 0xff), // colour 4
-	};
+	// put tiles into tile table
+	ppu.tile_table[1] = STARS_TILE_1;
+	ppu.tile_table[2] = STARS_TILE_2;
+	ppu.tile_table[3] = STARS_TILE_3;
+	ppu.tile_table[4] = STARS_TILE_4;
+	ppu.tile_table[32] = PLAYER_TILE_1;
+	ppu.tile_table[33] = PLAYER_TILE_2;
+	ppu.tile_table[34] = PLAYER_TILE_3;
+	ppu.tile_table[35] = PLAYER_TILE_4;
+
+	// platform
+	for (uint32_t i = 0; i < 5; ++i) {
+		ppu.background[i] = 4 << 8| 30;;
+	}
+
+	// // platform
+	// for (uint32_t i = (BackgroundWidth*5) + 5; i < (BackgroundWidth*5) + 10; ++i) {
+	// 	ppu.background[i] = int16_t(0x2);
+	// }
 }
 
 PlayMode::~PlayMode() {
@@ -101,7 +115,7 @@ void PlayMode::update(float dt) {
 	std::function<void(uint32_t, uint32_t)> delete_platform = 
 		[&](uint32_t tile_x, uint32_t tile_y) {
 		background_idx = tile_x + ppu.BackgroundWidth * tile_y;
-		if (ppu.background[background_idx] == 2) {
+		if (ppu.background[background_idx] == (4 << 8 | 30)) {
 			ppu.background[background_idx] = 1;
 			// uint can't be -ve!!!
 			if (tile_x > 0) delete_platform(tile_x - 1, tile_y);
@@ -114,17 +128,17 @@ void PlayMode::update(float dt) {
 	tile_x = (uint32_t)(position_px.x / 8);
 	tile_y = (uint32_t)(position_px.y / 8);
 	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
-	if (ppu.background[background_idx] == 2 && velocity_px.y < 0) { 
-		velocity_px.y = bounce_speed_px; // https://cplusplus.com/reference/cmath/abs/
-		position_px.y = (tile_y * 8.0f) + 8.0f; // position 1 block above tile
+	if (ppu.background[background_idx] == (4 << 8 | 30) && velocity_px.y < 0) { 
+		velocity_px.y = bounce_speed_px;
+		position_px.y = (tile_y * 8.0f) + 16.0f; // position 1 block above tile
 		delete_platform(tile_x, tile_y);
 	}
 	
 	// top-left
 	tile_x = (uint32_t)(position_px.x / 8);
-	tile_y = (uint32_t)((position_px.y+16.0) / 8);
+	tile_y = (uint32_t)((position_px.y+15.0) / 8);
 	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
-	if (ppu.background[background_idx] == 2 && velocity_px.y > 0) { 
+	if (ppu.background[background_idx] == (4 << 8 | 30) && velocity_px.y > 0) { 
 		velocity_px.y = 0.8f * (-bounce_speed_px); 
 		// position 2 blocks below tile
 		// since player is 2 blocks tall
@@ -133,20 +147,20 @@ void PlayMode::update(float dt) {
 	}
 
 	// bottom-right
-	tile_x = (uint32_t)((position_px.x+8) / 8);
+	tile_x = (uint32_t)((position_px.x+15.0) / 8);
 	tile_y = (uint32_t)(position_px.y / 8);
 	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
-	if (ppu.background[background_idx] == 2 && velocity_px.y < 0) { 
+	if (ppu.background[background_idx] == (4 << 8 | 30) && velocity_px.y < 0) { 
 		velocity_px.y = 0.8f * std::abs(bounce_speed_px); // https://cplusplus.com/reference/cmath/abs/
 		position_px.y = (tile_y * 8.0f) + 8.0f; // position 1 block above tile
 		delete_platform(tile_x, tile_y);
 	}
 	
 	// top-right
-	tile_x = (uint32_t)((position_px.x+8) / 8);
-	tile_y = (uint32_t)(position_px.y+16 / 8);
+	tile_x = (uint32_t)((position_px.x+15.0) / 8);
+	tile_y = (uint32_t)((position_px.y+15.0) / 8);
 	background_idx = tile_x + ppu.BackgroundWidth * tile_y;
-	if (ppu.background[background_idx] == 2 && velocity_px.y > 0) { 
+	if (ppu.background[background_idx] == (4 << 8 | 30) && velocity_px.y > 0) { 
 		velocity_px.y = 0.8f * (-bounce_speed_px); 
 		// position 2 blocks below tile
 		// since player is 2 blocks tall
@@ -171,19 +185,34 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	ppu.sprites[0].x = int8_t(position_px.x);
 	ppu.sprites[0].y = int8_t(position_px.y);
 	ppu.sprites[0].index = 32;
-	ppu.sprites[0].attributes = 7;
-
+	ppu.sprites[0].attributes = 0;
 	// sprite 2
+	ppu.sprites[1].x = int8_t(position_px.x + 8.0f);
+	ppu.sprites[1].y = int8_t(position_px.y);
+	ppu.sprites[1].index = 33;
+	ppu.sprites[1].attributes = 0;
+	// sprite 3
 	ppu.sprites[2].x = int8_t(position_px.x);
 	ppu.sprites[2].y = int8_t(position_px.y + 8.0f);
-	ppu.sprites[2].index = 32;
-	ppu.sprites[2].attributes = 7;
+	ppu.sprites[2].index = 34;
+	ppu.sprites[2].attributes = 0;
+	// sprite 4
+	ppu.sprites[3].x = int8_t(position_px.x + 8.0f);
+	ppu.sprites[3].y = int8_t(position_px.y + 8.0f);
+	ppu.sprites[3].index = 35;
+	ppu.sprites[3].attributes = 0;
 
 	// win sprite
-	ppu.sprites[3].x = 100;
-	ppu.sprites[3].y = 100;
-	ppu.sprites[3].index = 31;
-	ppu.sprites[3].attributes = 7;
+	ppu.sprites[4].x = 100;
+	ppu.sprites[4].y = 100;
+	ppu.sprites[4].index = 31;
+	ppu.sprites[4].attributes = 0;
+
+	// cloud sprite
+	ppu.sprites[5].x;
+	ppu.sprites[5].y;
+	ppu.sprites[5].index = 30;
+	ppu.sprites[5].attributes = 4;
 
 	//--- actually draw ---
 	ppu.draw(drawable_size);

@@ -114,6 +114,9 @@ if (maek.OS === 'windows') {
 // cppFile: name of c++ file to compile
 // objFileBase (optional): base name object file to produce (if not supplied, set to options.objDir + '/' + cppFile without the extension)
 //returns objFile: objFileBase + a platform-dependant suffix ('.o' or '.obj')
+
+const load_save_png_obj = maek.CPP('load_save_png.cpp');
+
 const game_names = [
 	maek.CPP('PlayMode.cpp'),
 	maek.CPP('main.cpp'),
@@ -130,7 +133,7 @@ const common_names = [
 	maek.CPP('ColorProgram.cpp'),
 	maek.CPP('Scene.cpp'),
 	maek.CPP('Mesh.cpp'),
-	// maek.CPP('load_save_png.cpp'),
+	load_save_png_obj,
 	maek.CPP('gl_compile_program.cpp'),
 	maek.CPP('Mode.cpp'),
 	maek.CPP('GL.cpp'),
@@ -152,7 +155,7 @@ const show_scene_names = [
 // extract tiles pipeline
 const extract_tiles_obj = [
 	maek.CPP('extract_tiles.cpp'),
-	maek.CPP('load_save_png.cpp')
+	load_save_png_obj,
 ];
 
 //the '[exeFile =] LINK(objFiles, exeFileBase, [, options])' links an array of objects into an executable:

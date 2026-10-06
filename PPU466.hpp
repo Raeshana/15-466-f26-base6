@@ -30,7 +30,8 @@ struct PPU466 {
 
 	//Background Color:
 	// The PPU clears the screen to the background color before other drawing takes place.
-	glm::u8vec3 background_color = glm::u8vec3(0x00, 0x00, 0x00);
+	// 0d0d2c
+	glm::u8vec3 background_color = glm::u8vec3(0x0d, 0x0d, 0x2c);
 
 	//Palette:
 	// The PPU uses 2-bit indexed color;
@@ -68,10 +69,10 @@ struct PPU466 {
 	std::array< Tile, 16 * 16 > tile_table;
 
 	//Background Layer:
-	// The PPU's background layer is made of 32x60 tiles (32*8 x 480 pixels).
+	// The PPU's background layer is made of 64x60 tiles (64*8 x 480 pixels).
 	// This is vertically twice the size of the screen, to support vertical scrolling.
 	enum : uint32_t {
-		BackgroundWidth = 32,
+		BackgroundWidth = 64,
 		BackgroundHeight = 60
 	};
 
