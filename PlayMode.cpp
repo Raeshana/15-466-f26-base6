@@ -292,7 +292,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			velocity_px.y = 0.0f;
 			acceleration_px.y = 0.0f;
 		}
-		draw_text(textPos, "You win", 10.0f);
-		draw_text(textPos2, "For the first time, it is you who gets to make a wish...", 10.0f);
+		// draw_text(textPos, "You win", 10.0f);
+		// draw_text(textPos2, "For the first time, it is you who gets to make a wish...", 10.0f);
 	};
 }
