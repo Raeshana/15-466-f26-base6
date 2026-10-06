@@ -25,6 +25,8 @@
 PlayMode::PlayMode() {
 	//use sprite 32 as a "player":
 	ppu.tile_table[32] = PLAYER_TILE;
+	//use sprite 31 as a "win condition"
+	ppu.tile_table[31] = PLAYER_TILE;
 
 	//used for the player:
 	ppu.palette_table[7] = {
@@ -178,6 +180,12 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	ppu.sprites[2].index = 32;
 	ppu.sprites[2].attributes = 7;
 
+	// win sprite
+	ppu.sprites[3].x = 100;
+	ppu.sprites[3].y = 100;
+	ppu.sprites[3].index = 31;
+	ppu.sprites[3].attributes = 7;
+
 	//--- actually draw ---
 	ppu.draw(drawable_size);
 
@@ -208,14 +216,27 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			// 	glm::u8vec4(0xff, 0xff, 0xff, 0xff));
 		};
 
+		//middle of screen
+		glm::vec2 textPos;
+		textPos.x = (float)ppu.ScreenWidth/2.0f;
+		textPos.y = (float)ppu.ScreenHeight/2.0f;
+
 		//floor-lose condition
 		if (position_px.y <= 0 && velocity_px.y < 0.0f) {
 			// display you lose text
-			glm::vec2 textPos;
-			textPos.x = (float)ppu.ScreenWidth/2.0f;
-			textPos.y = (float)ppu.ScreenHeight/2.0f;
 			draw_text(textPos, "You fell. I guess all shooting stars must fall in the end...", 10.0f);
 			// change player sprite to dead player sprite
+		}
+
+		if (position_px.x + 4.0f >= ppu.sprites[3].x &&
+			position_px.x + 4.0f <= ppu.sprites[3].x + 8.0f &&
+			position_px.y + 4.0f >= ppu.sprites[3].y &&
+			position_px.y + 4.0f <= ppu.sprites[3].y + 8.0f)
+		{
+			draw_text(textPos, "For the first time, it is you who gets to make a wish. You win.", 10.0f);
+			velocity_px.x = 0.0f;
+			velocity_px.y = 0.0f;
+			acceleration_px.y = 0.0f;
 		}
 	};
 }
