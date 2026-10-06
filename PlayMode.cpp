@@ -202,10 +202,10 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	ppu.sprites[3].attributes = 0;
 
 	// win sprite
-	ppu.sprites[4].x = 100;
-	ppu.sprites[4].y = 100;
-	ppu.sprites[4].index = 31;
-	ppu.sprites[4].attributes = 0;
+	// ppu.sprites[4].x = 100;
+	// ppu.sprites[4].y = 100;
+	// ppu.sprites[4].index = 31;
+	// ppu.sprites[4].attributes = 0;
 
 	// cloud sprite
 	ppu.sprites[5].x;
@@ -231,6 +231,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//text
 	//modified from assignment 5:
 	{
+		// glm::vec2 offset = -0.5f * (glm::vec2(ppu.ScreenWidth, ppu.ScreenHeight));
+
 		//figure out view transform to center:
 		glm::mat4 world_to_clip = glm::mat4(
 			2.0f/(float)ppu.ScreenWidth, 0.0f, 0.0f, 0.0f, // x coord
@@ -255,17 +257,24 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			// 	glm::u8vec4(0xff, 0xff, 0xff, 0xff));
 		};
 
-		//middle of screen
-		glm::vec2 textPos;
-		textPos.x = (float)ppu.ScreenWidth/2.0f;
+		//line 1
+		glm::vec2 textPos; 
+		textPos.x = ((float)ppu.ScreenWidth/2.0f) - 30.0f;
 		textPos.y = (float)ppu.ScreenHeight/2.0f;
 
-		//floor-lose condition
+		//line 2
+		glm::vec2 textPos2; 
+		textPos2.x = ((float)ppu.ScreenWidth/2.0f) - 90.0f;
+		textPos2.y = (float)ppu.ScreenHeight/2.0f - 15.0f;
+
 		if (position_px.y <= 0 && velocity_px.y < 0.0f) {
 			// display you lose text
-			draw_text(textPos, "You fell. I guess all shooting stars must fall in the end...", 10.0f);
+			draw_text(textPos, "You fell", 10.0f);
+			draw_text(textPos2, "I guess all shooting stars must fall in the end...", 10.0f);
 			// change player sprite to dead player sprite
 		}
+		// draw_text(textPos, "You fell", 10.0f);
+		// draw_text(textPos2, "I guess all shooting stars must fall in the end...", 10.0f);
 
 		// win condition
 		// if the player has removed all the blocks:
@@ -277,10 +286,13 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			}
 		}
 		if (can_win) {
-			draw_text(textPos, "For the first time, it is you who gets to make a wish. You win.", 10.0f);
+			draw_text(textPos, "You win", 10.0f);
+			draw_text(textPos2, "For the first time, it is you who gets to make a wish...", 10.0f);
 			velocity_px.x = 0.0f;
 			velocity_px.y = 0.0f;
 			acceleration_px.y = 0.0f;
 		}
+		draw_text(textPos, "You win", 10.0f);
+		draw_text(textPos2, "For the first time, it is you who gets to make a wish...", 10.0f);
 	};
 }
