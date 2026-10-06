@@ -15,7 +15,6 @@ Screen Shot:
 
 How To Play:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
 All that cheese is actually the moon...well, a star.
 You play as a star trying to get rid of (square) clouds in the sky by jumping on them.
 Landing on a cloud tile springs you upwards.
